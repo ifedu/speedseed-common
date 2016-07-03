@@ -22,7 +22,7 @@ module.exports = class Yo extends generators.Base {
     pathsSet() {
         const path = require('path')
 
-        this.sourceRoot(path.resolve(__dirname, '../../'))
+        this.sourceRoot(path.resolve(__dirname, '../../../'))
     }
 
     promptingOptions(...args) {

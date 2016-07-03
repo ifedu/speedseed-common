@@ -17,9 +17,4 @@ module.exports = function ($) {
         this.create(`${route}/${$.framework}/compiler/${$.compiler}/typings`, './typings')
         this.create(`${route}/${$.framework}/compiler/${$.compiler}/typings.json`, './typings.json')
     }
-
-    // TEST
-    if ($.test !== 'no') {
-        this.create(`seed/test/${$.test}/karma.conf.js`, './.core/karma.conf.js', false)
-    }
 }

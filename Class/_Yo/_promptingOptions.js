@@ -42,7 +42,7 @@ module.exports = function (configTemplate) {
 
     const done = this.async()
 
-    this.setPrompting(prompting, () => {
+    this.promptingYo(prompting, () => {
         const frameworks = {
             angularjs: 'AngularJS',
             angular2: 'Angular2',
@@ -73,7 +73,7 @@ module.exports = function (configTemplate) {
             choices: choicesCss
         }]
 
-        this.setPrompting(prompting, () => {
+        this.promptingYo(prompting, () => {
             const ext = {
                 babeljs: '.js',
                 coffeescript: '.coffee',
