@@ -17,6 +17,6 @@ module.exports = function (fileTpl, fileDest, option) {
             )
         }
     } catch (e) {
-        console.log(`${fileTpl} not exist`)
+        // console.log(`${fileTpl} not exist`)
     }
 }

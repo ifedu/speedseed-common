@@ -11,6 +11,14 @@ module.exports = function ($) {
     // SERVER
     this.create(`${route}/all/server/**/*`, './server', true)
 
+
+    // TEST
+    if ($.test !== 'no') {
+        this.create(`${route}/all/compiler/${$.compiler}/${$.test}`, './app', true)
+        this.create(`${route}/${$.framework}/compiler/all/${$.test}`, './app', true)
+        this.create(`${route}/${$.framework}/compiler/${$.compiler}/${$.test}`, './app', true)
+    }
+
     // COMPILER
     if ($.compiler === 'typescript') {
         this.create(`${route}/all/compiler/${$.compiler}/tsconfig.json`, './tsconfig.json')
