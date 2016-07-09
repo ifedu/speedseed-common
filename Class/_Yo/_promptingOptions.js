@@ -18,14 +18,20 @@ module.exports = function (configTemplate) {
 
     choicesTest.push({ name: 'No', value: 'no' })
 
-    let prompting = [{
-        default: this.config.get('framework') || 0,
-        message: 'Library / Framework?',
-        name: 'framework',
-        type: 'list',
+    let prompting = []
 
-        choices: choicesFramework
-    }]
+    if (choicesFramework.length > 1) {
+        prompting.push({
+            default: this.config.get('framework') || 0,
+            message: 'Library / Framework?',
+            name: 'framework',
+            type: 'list',
+
+            choices: choicesFramework
+        })
+    } else {
+        this.config.set('framework', choicesFramework[0].value)
+    }
 
     if (choicesTest.length > 1) {
         prompting.push({
@@ -57,21 +63,33 @@ module.exports = function (configTemplate) {
         const choicesCompiler = checkConfig(configTemplate.framework[framework].compiler)
         const choicesCss = checkConfig(configTemplate.framework[framework].css)
 
-        prompting = [{
-            default: this.config.get('compiler') || 0,
-            message: 'JavaScript Compiler?',
-            name: 'compiler',
-            type: 'list',
+        prompting = []
 
-            choices: choicesCompiler
-        }, {
-            default: this.config.get('css') || 0,
-            message: 'CSS?',
-            name: 'css',
-            type: 'list',
+        if (choicesCompiler.length > 1) {
+            prompting.push({
+                default: this.config.get('compiler') || 0,
+                message: 'JavaScript Compiler?',
+                name: 'compiler',
+                type: 'list',
 
-            choices: choicesCss
-        }]
+                choices: choicesCompiler
+            })
+        } else {
+            this.config.set('compiler', choicesCompiler[0].value)
+        }
+
+        if (choicesCss.length > 1) {
+            prompting.push({
+                default: this.config.get('css') || 0,
+                message: 'CSS?',
+                name: 'css',
+                type: 'list',
+
+                choices: choicesCss
+            })
+        } else {
+            this.config.set('css', choicesCss[0].value)
+        }
 
         this.promptingYo(prompting, () => {
             const ext = {

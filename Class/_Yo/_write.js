@@ -1,5 +1,5 @@
 module.exports = function ($) {
-    const route = `seed/template/${$.template}`
+    const route = 'seed/template'
 
     // FRAMEWORK
     this.create(`${route}/all/compiler/${$.compiler}/app`, './app', true)
