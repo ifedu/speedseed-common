@@ -1,5 +1,9 @@
 module.exports = {
-    Config: require('./Class/_Config.js'),
-    Files: require('./Class/_Files.js'),
-    Yo: require('./Class/_Yo.js')
+    getYo(options) {
+        const Yo = require('./Class/Yo.js')(options)
+
+        return Yo
+    },
+
+    Files: require('./Class/Files.js')
 }

@@ -1,4 +1,4 @@
-module.exports = class Files {
+class Files {
     del(file, fn) {
         require('del')(file, {
             force: true
@@ -35,3 +35,5 @@ module.exports = class Files {
         fs.writeFileSync(fileCore, JSON.stringify(config, null, spaces))
     }
 }
+
+module.exports = Files
