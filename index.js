@@ -5,5 +5,6 @@ module.exports = {
         return Yo
     },
 
+    Config: require('./Class/Config.js'),
     Files: require('./Class/Files.js')
 }
