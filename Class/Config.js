@@ -89,6 +89,19 @@ module.exports = class Config extends generators.Base {
                 : this.config.set('css', choicesCss[0].value)
         }
 
+        const setHtml = (choicesHtml) => {
+            (choicesHtml.length > 1)
+                ? prompting.push({
+                    default: this.config.get('html') || 0,
+                    message: 'HTML?',
+                    name: 'html',
+                    type: 'list',
+
+                    choices: choicesHtml
+                })
+                : this.config.set('html', choicesHtml[0].value)
+        }
+
         const setTest = (choicesTest) => {
             choicesTest.push({ name: 'No', value: 'no' });
 
@@ -116,6 +129,7 @@ module.exports = class Config extends generators.Base {
 
             setCompiler(tplOptions[framework].compiler)
             setCss(tplOptions[framework].css)
+            setHtml(tplOptions[framework].html)
 
             this._setPrompting(prompting, () => {
                 setCompilerExt()
@@ -172,14 +186,14 @@ module.exports = class Config extends generators.Base {
 
         const createApp = (route) => {
             this._create(`${route}/app/IMPORTANT.txt`, './app/IMPORTANT.txt')
-            this._create(`${route}/app/**/*.jade`, './app')
+            this._create(`${route}/app/**/*.${$.html}`, './app')
             this._create(`${route}/app/**/*.jsx`, './app')
             this._create(`${route}/app/**/*${$.compilerExt}`, './app')
-            this._create(`${route}/app/**/*${$.css}`, './app')
+            this._create(`${route}/app/**/*.${$.css}`, './app')
         }
 
         const createServer = (route) => {
-            this._create(`${route}/server/**/*${$.css}`, './server')
+            this._create(`${route}/server/**/*.${$.css}`, './server')
         }
 
         const createTest = (route) => {
