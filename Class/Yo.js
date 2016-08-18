@@ -12,6 +12,8 @@ module.exports = (tplOptions) =>
             const path = require('path')
 
             this.sourceRoot(path.resolve(__dirname, '../../../'))
+            // this.sourceRoot(path.resolve(process.cwd(), '../../../generator-speedseed-multi-tic-tac-toe'))
+            // this.sourceRoot(path.resolve(process.cwd(), '../generator-speedseed-cleanly-angular2-tour-of-heroes'))
         }
 
         prompting() {
