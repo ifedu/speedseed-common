@@ -5,9 +5,11 @@ module.exports = class Config extends generators.Base {
         super(...args)
     }
 
-    _create(fileTpl, fileDest) {
+    _create(fileTpl, fileDest, isTpl) {
         try {
-            this.fs.copyTpl(
+            const copyTpl = (isTpl === false) ? 'copy' : 'copyTpl'
+
+            this.fs[copyTpl](
                 this.templatePath(fileTpl),
                 this.destinationPath(fileDest),
                 this.config.getAll()
@@ -16,7 +18,7 @@ module.exports = class Config extends generators.Base {
             if (fileTpl.indexOf('/**/*') > -1) {
                 fileTpl = fileTpl.replace('/**/*', '/**/.*')
 
-                this.fs.copyTpl(
+                this.fs[copyTpl](
                     this.templatePath(fileTpl),
                     this.destinationPath(fileDest),
                     this.config.getAll()
@@ -186,6 +188,7 @@ module.exports = class Config extends generators.Base {
 
         const createApp = (route) => {
             this._create(`${route}/app/IMPORTANT.txt`, './app/IMPORTANT.txt')
+            this._create(`${route}/app/assets/**/*`, './app/assets', false)
             this._create(`${route}/app/**/*.${$.html}`, './app')
             this._create(`${route}/app/**/*.jsx`, './app')
             this._create(`${route}/app/**/*${$.compilerExt}`, './app')
