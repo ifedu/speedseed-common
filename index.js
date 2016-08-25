@@ -1,9 +1,5 @@
 module.exports = {
-    getYo(options) {
-        const Yo = require('./Class/Yo.js')(options)
-
-        return Yo
-    },
+    getYo: (options) => require('./Class/Yo.js')(options),
 
     Config: require('./Class/Config.js'),
     Files: require('./Class/Files.js')
