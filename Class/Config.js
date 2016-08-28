@@ -9,21 +9,24 @@ module.exports = class Config extends generators.Base {
         try {
             const copyTpl = (isTpl === false) ? 'copy' : 'copyTpl'
 
-            this.fs[copyTpl](
-                this.templatePath(fileTpl),
-                this.destinationPath(fileDest),
-                this.config.getAll()
-            )
+            const copy = (fileTpl) => {
+                this.fs[copyTpl](
+                    this.templatePath(fileTpl),
+                    this.destinationPath(fileDest),
+                    this.config.getAll()
+                )
+            }
 
-            // if (fileTpl.indexOf('/**/*') > -1) {
-            //     fileTpl = fileTpl.replace('/**/*', '/**/.*')
-            //
-            //     this.fs[copyTpl](
-            //         this.templatePath(fileTpl),
-            //         this.destinationPath(fileDest),
-            //         this.config.getAll()
-            //     )
-            // }
+            const copyWithPoint = (fileTpl) => {
+                if (fileTpl.indexOf('/**/*') > -1) {
+                    fileTpl = fileTpl.replace('/**/*', '/**/.*')
+
+                    copy(fileTpl)
+                }
+            }
+
+            copy(fileTpl)
+            copyWithPoint(fileTpl)
         } catch (e) {
             console.log(e)
         }
@@ -32,27 +35,35 @@ module.exports = class Config extends generators.Base {
     _promptingOptions(configTpl) {
         const tpl = this.config.get('tpl')
 
-        configTpl.options.forEach((option) => {
-            option.default = tpl[option.name] || 0
-            option.option = { tpl }
-            option.type = 'list'
-        })
+        const options = []
 
-        configTpl.routeTpl = `${configTpl.routeTpl}/seed/template`
+        const addOptions = (configTplOptions, routeParent) => {
+            configTplOptions.forEach((option) => {
+                option.default = tpl[option.name] || 0
+                option.routeParent = routeParent
+                option.option = { tpl }
+                option.type = 'list'
+
+                options.push(option)
+
+                if (option.options) addOptions(option.options, option.name)
+            })
+        }
+
+        addOptions(configTpl.options, '')
+
+        configTpl.options = options
 
         this._setPromptings(configTpl, this.async())
     }
 
     _setConfig(options) {
-        const core = this.config.get('core') || options.core
-        const general = this.config.get('general') || options.general
-        const tpl = this.config.get('tpl') || {}
-        const user = this.config.get('user') || {}
+        const setProp = (prop) => options[prop] || this.config.get(prop) || {}
 
-        this.config.set('core', core)
-        this.config.set('general', general)
-        this.config.set('tpl', tpl)
-        this.config.set('user', user)
+        this.config.set('core', setProp('core'))
+        this.config.set('general', setProp('general'))
+        this.config.set('tpl', setProp('tpl'))
+        this.config.set('user', setProp('user'))
     }
 
     _setPromptings(configTpl, cb) {
@@ -60,10 +71,6 @@ module.exports = class Config extends generators.Base {
             let choiceExtra
 
             choices.forEach((choice) => {
-                if (choice.route) {
-                    console.log(configTpl.routeTpl)
-                }
-
                 if (choice.value === value && choice.extra) {
                     choiceExtra = choice.extra
 
@@ -72,12 +79,6 @@ module.exports = class Config extends generators.Base {
             })
 
             return choiceExtra
-        }
-
-        const hasRoute = (prompt, value) => {
-            if (prompt.route) {
-                configTpl.routeTpl = `${configTpl.routeTpl}/${prompt.name}/${value}`
-            }
         }
 
         const setPrompting = (prompt, configTpl, cb) => {
@@ -94,6 +95,7 @@ module.exports = class Config extends generators.Base {
 
                 extend(option, { [keyAnswer]: value }, true)
 
+                // console.log(prompt.routeParent)
                 const extra = (prompt.choices) ? checkExtra(prompt.choices, value) : undefined
 
                 if (prompt.choices && extra) {
@@ -104,14 +106,15 @@ module.exports = class Config extends generators.Base {
 
                 this.config.set(keyOption, option)
 
-                hasRoute(prompt, value)
+                configTpl.routes = configTpl.routes || []
+                const routeParent = configTpl.routes[prompt.routeParent] || keyAnswer
+                configTpl.routes[keyAnswer] = `${routeParent}/${value}`
 
                 cb()
             })
         }
 
         let i = 0
-        let len = configTpl.options.length
 
         const prompting = () => {
             if (!configTpl.options[i]) return cb()
@@ -123,102 +126,54 @@ module.exports = class Config extends generators.Base {
 
         prompting()
     }
-    //
-    // _setPromptingObject(prompts, done) {
-    //     this
-    //     .prompt(prompts)
-    //     .then((answers) => {
-    //         for (let answer in answers) {
-    //             this.config.set(answer, answers[answer])
-    //         }
-    //
-    //         done()
-    //     })
-    // }
-    //
+
     _writeAllFiles($, configTpl) {
-    //     const checkExistFile = (file) => {
-    //         try {
-    //             require(file)($)
-    //         } catch (e) {}
-    //     }
-    //
-    //     const updateRootModifiedByUser = (route) => {
-    //         checkExistFile(`${route}/root-modified-by-user/babelrc.js`)
-    //         checkExistFile(`${route}/root-modified-by-user/bower.js`)
-    //         checkExistFile(`${route}/root-modified-by-user/bowerrc.js`)
-    //         checkExistFile(`${route}/root-modified-by-user/core-config.js`)
-    //         checkExistFile(`${route}/root-modified-by-user/eslintrc.js`)
-    //         checkExistFile(`${route}/root-modified-by-user/package.js`)
-    //     }
-    //     //
-    //     // const createRoot = (route) => {
-    //     //     this._create(`${route}/root/editorconfig`, './.editorconfig')
-    //     //     this._create(`${route}/root/gitignore`, './.gitignore')
-    //     //     this._create(`${route}/root/gulpfile.js`, './gulpfile.js')
-    //     // }
-    //     //
-    //     // const createApp = (route) => {
-    //     //     this._create(`${route}/app/IMPORTANT.txt`, './app/IMPORTANT.txt')
-    //     //     this._create(`${route}/app/assets/**/*`, './app/assets', false)
-    //     //     this._create(`${route}/app/**/*.${$.html}`, './app')
-    //     //     this._create(`${route}/app/**/*.jsx`, './app')
-    //     //     this._create(`${route}/app/**/*${$.compilerExt}`, './app')
-    //     //     this._create(`${route}/app/**/*.${$.css}`, './app')
-    //     // }
-    //     //
-    //     // const createServer = (route) => {
-    //     //     this._create(`${route}/server/**/*.${$.css}`, './server')
-    //     // }
-    //     //
-    //     // const createTest = (route) => {
-    //     //     this._create(`${route}/test/${$.test}/app/**/*`, './app')
-    //     //     this._create(`${route}/test/${$.test}/karma.conf.js`, './.core/karma.conf.js')
-    //     // }
-    //     //
-    //     // const createTypeScript = (route) => {
-    //     //     this._create(`${route}/tsconfig.json`, './tsconfig.json')
-    //     //     this._create(`${route}/typings.json`, './typings.json')
-    //     //     this._create(`${route}/typings/**/*`, './typings')
-    //     // }
-    //
-    //     const createFiles = (route) => {
-    //         this._create(`${route}/tsconfig.json`, './tsconfig.json')
-    //     }
-    //
+        const createFiles = (route) => {
+            updateRootModifiedByUser(`${route}all/root-modified-by-user`)
+            this._create(`${route}/.core/**/*`, './.core')
+            this._create(`${route}/root/**/*`, './')
+            this._create(`${route}/app/**/*`, './app')
+            this._create(`${route}/app/assets/**/*`, './app/assets', false)
+        }
+
+        const updateRootModifiedByUser = (route) => {
+            const fs = require('fs')
+
+            if (fs.existsSync(route))
+                fs.readdirSync(route).forEach((file) => require(`${route}/${file}`)($))
+        }
+
         const speedseed = require('speedseed')
         const files = new speedseed.Files()
 
         files.del('.core', () => {
+            const path = require('path')
             const tpl = this.config.get('tpl')
-            const routeTpl = `${configTpl.routeTpl}`
 
-            this._create(`${routeTpl}/${tpl.compiler}/app/**/*`, './app')
-            this._create(`${routeTpl}/${tpl.html}/app/**/*`, './app')
-    //
-    //         // updateRootModifiedByUser(routeAll)
-    //         // updateRootModifiedByUser(routeFramework)
-    //         //
-    //         // createRoot(routeAll)
-    //         // createRoot(routeFramework)
-    //         //
-    //         // createApp(routeAll)
-    //         // createApp(routeFramework)
-    //         //
-    //         // createServer(routeAll)
-    //         // createServer(routeFramework)
-    //         //
-    //         // if ($.test !== 'no') {
-    //         //     createTest(routeAll)
-    //         //     createTest(routeFramework)
-    //         // }
-    //         //
-    //         // if ($.compiler === 'typescript') {
-    //         //     createTypeScript(routeAll)
-    //         //     createTypeScript(routeFramework)
-    //         // }
-    //         //
-    //         // this.composeWith('speedseed:postinstall', { $ })
+            const routeTpl = `${configTpl.routeTpl}/seed/template/`
+
+            for (let prop in configTpl.routes) {
+                const route = configTpl.routes[prop]
+                const alls = route.split('/')
+
+                createFiles(`${routeTpl}${route}`)
+
+                for (let i = 0, len = alls.length; i < len; i++) {
+                    let routeAll = ''
+
+                    alls.forEach((all, j) => {
+                        routeAll += (i === j)
+                            ? 'all/'
+                            : `${all}/`
+                    })
+
+                    createFiles(`${routeTpl}${routeAll}`)
+                    createFiles(`${routeTpl}${routeAll}all`)
+                }
+            }
+
+
+            this.composeWith('speedseed:postinstall', { options: $ })
         })
     }
 }

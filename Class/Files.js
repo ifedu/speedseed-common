@@ -6,33 +6,41 @@ class Files {
         .then(() => fn())
     }
 
-    readFile(fileCore, config) {
+    extendFromOptions($, optionsGeneral, optionsTpl) {
+        const extend = require('extend')
+
+        for (let prop in optionsTpl) {
+            const optionTpl = optionsTpl[prop]
+
+            extend(
+                true,
+                optionsGeneral,
+                optionTpl[$.tpl[prop]]
+            )
+        }
+    }
+
+    extendFromUser(optionsGeneral, fileCore) {
         const extend = require('extend')
         const fs = require('fs')
 
-        let file = {}
+        let optionsUser = {}
 
         if (fs.existsSync(`./${fileCore}`) === true) {
             try {
-                file = JSON.parse(fs.readFileSync(`./${fileCore}`, 'utf8'))
+                optionsUser = JSON.parse(fs.readFileSync(`./${fileCore}`, 'utf8'))
             } catch (e) {
                 console.log(`ERROR in ${fileCore}`)
             }
         }
 
-        extend(true, config, file)
+        extend(true, optionsGeneral, optionsUser)
     }
 
-    updateFile(fileCore, spaces, config) {
-        this.readFile(fileCore, config)
-
-        this.writeFile(fileCore, spaces, config)
-    }
-
-    writeFile(fileCore, spaces, config) {
+    writeFile(fileCore, optionsGeneral, spaces) {
         const fs = require('fs')
 
-        fs.writeFileSync(fileCore, JSON.stringify(config, null, spaces))
+        fs.writeFileSync(fileCore, JSON.stringify(optionsGeneral, null, spaces))
     }
 }
 
