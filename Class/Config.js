@@ -67,18 +67,20 @@ module.exports = class Config extends generators.Base {
     }
 
     _setPromptings(configTpl, cb) {
-        const checkExtra = (choices, value) => {
-            let choiceExtra
+        const getChoiceSelected = (choices, value) => {
+            let choiceSelected = {}
 
             choices.forEach((choice) => {
-                if (choice.value === value && choice.extra) {
-                    choiceExtra = choice.extra
-
-                    return
-                }
+                if (choice.value === value) return choiceSelected = choice
             })
 
-            return choiceExtra
+            return choiceSelected
+        }
+
+        const hasExclude = (choice) => {
+            console.log(choice.exclude)
+
+            return false
         }
 
         const setPrompting = (prompt, configTpl, cb) => {
@@ -87,49 +89,79 @@ module.exports = class Config extends generators.Base {
             .then((answer) => {
                 const extend = require('extend')
 
-                const keyOption = Object.keys(prompt.option)[0]
-                const keyAnswer = Object.keys(answer)[0]
+                const objectYo = Object.keys(prompt.option)[0]
+                const typePromptProp = Object.keys(answer)[0]
 
-                const option = this.config.get(keyOption) || {}
-                const value = answer[keyAnswer]
+                const typePromptOption = this.config.get(objectYo) || {}
+                const typePromptValue = answer[typePromptProp]
 
-                extend(option, { [keyAnswer]: value }, true)
+                extend(typePromptOption, { [typePromptProp]: typePromptValue }, true)
 
-                // console.log(prompt.routeParent)
-                const extra = (prompt.choices) ? checkExtra(prompt.choices, value) : undefined
+                const choice = getChoiceSelected(prompt.choices, typePromptValue)
 
-                if (prompt.choices && extra) {
-                    extend(option, {
-                        [`${keyAnswer}-extra`]: extra
+                if (prompt.choices && choice.extra) {
+                    extend(typePromptOption, {
+                        [`${typePromptProp}-extra`]: choice.extra
                     }, true)
                 }
 
-                this.config.set(keyOption, option)
+                this.config.set(objectYo, typePromptOption)
 
                 configTpl.routes = configTpl.routes || []
-                const routeParent = configTpl.routes[prompt.routeParent] || keyAnswer
-                configTpl.routes[keyAnswer] = `${routeParent}/${value}`
+                const routeParent = configTpl.routes[prompt.routeParent] || typePromptProp
+                configTpl.routes[typePromptProp] = `${routeParent}/${typePromptValue}`
 
                 cb()
             })
         }
 
-        let i = 0
+        const checkExclude = (option) => {
+            const excludeOption = (choices, i) => {
+                const choice = choices[i]
 
-        const prompting = () => {
-            if (!configTpl.options[i]) return cb()
+                const all = this.config.getAll()
 
-            setPrompting(configTpl.options[i], configTpl, prompting)
+                for (let prop in all.tpl) {
+                    if (choice.exclude
+                    && choice.exclude[prop]
+                    && choice.exclude[prop].indexOf(all.tpl[prop]) !== -1) {
+                        const position = choices.indexOf(choice)
 
-            i++
+                        choices.splice(position, 1)
+                    }
+                }
+            }
+
+            for (let i = option.choices.length - 1; i >= 0; i--) {
+                excludeOption(option.choices, i)
+            }
+
+            return option
         }
 
-        prompting()
+        (() => {
+            let i = 0
+
+            const prompting = () => {
+                let option = configTpl.options[i]
+
+                if (!option) return cb()
+
+                option = checkExclude(option)
+
+                setPrompting(option, configTpl, prompting)
+
+                i++
+            }
+
+            prompting()
+        })()
     }
 
     _writeAllFiles($, configTpl) {
         const createFiles = (route) => {
             updateRootModifiedByUser(`${route}all/root-modified-by-user`)
+
             this._create(`${route}/.core/**/*`, './.core')
             this._create(`${route}/root/**/*`, './')
             this._create(`${route}/app/**/*`, './app')
