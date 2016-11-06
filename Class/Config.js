@@ -9,238 +9,209 @@ module.exports = class Config extends generators.Base {
         try {
             const copyTpl = (isTpl === false) ? 'copy' : 'copyTpl'
 
-            this.fs[copyTpl](
-                this.templatePath(fileTpl),
-                this.destinationPath(fileDest),
-                this.config.getAll()
-            )
-
-            if (fileTpl.indexOf('/**/*') > -1) {
-                fileTpl = fileTpl.replace('/**/*', '/**/.*')
-
+            const copy = (fileTpl) => {
                 this.fs[copyTpl](
                     this.templatePath(fileTpl),
                     this.destinationPath(fileDest),
                     this.config.getAll()
                 )
             }
+
+            const copyWithPoint = (fileTpl) => {
+                if (fileTpl.indexOf('/**/*') > -1) {
+                    fileTpl = fileTpl.replace('/**/*', '/**/.*')
+
+                    copy(fileTpl)
+                }
+            }
+
+            copy(fileTpl)
+            copyWithPoint(fileTpl)
         } catch (e) {
-            // console.log(e)
+            console.log(e)
         }
     }
 
-    _promptingOptions(tplOptions) {
-        let prompting = []
+    _promptingOptions(configTpl) {
+        const tpl = this.config.get('tpl')
 
-        const setCompilerExt = () => {
-            const ext = {
-                babeljs: '.js',
-                coffeescript: '.coffee',
-                typescript: '.ts'
-            }
+        const options = []
 
-            this.config.set('compilerExt', ext[this.config.get('compiler')])
-        }
+        const addOptions = (configTplOptions, routeParent) => {
+            configTplOptions.forEach((option) => {
+                option.default = tpl[option.name] || 0
+                option.routeParent = routeParent
+                option.option = { tpl }
+                option.type = 'list'
 
-        const setOptionsTemplateToGenerator = (done) => {
-            const props = this.config.getAll()
+                options.push(option)
 
-            for (let prop in props) {
-                this.options.speedseed.config.set(prop, props[prop])
-            }
-
-            done()
-        }
-
-        const setTemplate = (choicesFramework) => {
-            (choicesFramework.length > 1)
-                ? prompting.push({
-                    default: this.config.get('framework') || 0,
-                    message: 'Library / Framework?',
-                    name: 'framework',
-                    type: 'list',
-
-                    choices: choicesFramework
-                })
-                : this.config.set('framework', choicesFramework[0].value)
-        }
-
-        const setCompiler = (choicesCompiler) => {
-            (choicesCompiler.length > 1)
-                ? prompting.push({
-                    default: this.config.get('compiler') || 0,
-                    message: 'JavaScript Compiler?',
-                    name: 'compiler',
-                    type: 'list',
-
-                    choices: choicesCompiler
-                })
-                : this.config.set('compiler', choicesCompiler[0].value)
-        }
-
-        const setCss = (choicesCss) => {
-            (choicesCss.length > 1)
-                ? prompting.push({
-                    default: this.config.get('css') || 0,
-                    message: 'CSS?',
-                    name: 'css',
-                    type: 'list',
-
-                    choices: choicesCss
-                })
-                : this.config.set('css', choicesCss[0].value)
-        }
-
-        const setHtml = (choicesHtml) => {
-            (choicesHtml.length > 1)
-                ? prompting.push({
-                    default: this.config.get('html') || 0,
-                    message: 'HTML?',
-                    name: 'html',
-                    type: 'list',
-
-                    choices: choicesHtml
-                })
-                : this.config.set('html', choicesHtml[0].value)
-        }
-
-        const setTest = (choicesTest) => {
-            choicesTest.push({ name: 'No', value: 'no' });
-
-            (choicesTest.length > 1)
-                ? prompting.push({
-                    default: this.config.get('test') || 0,
-                    message: 'Test?',
-                    name: 'test',
-                    type: 'list',
-
-                    choices: choicesTest
-                })
-                : this.config.set('test', 'no')
-        }
-
-        setTemplate(tplOptions.framework)
-        setTest(tplOptions.test || [])
-
-        const done = this.async()
-
-        this._setPrompting(prompting, () => {
-            prompting = []
-
-            const framework = this.config.get('framework')
-
-            setCompiler(tplOptions[framework].compiler)
-            setCss(tplOptions[framework].css)
-            setHtml(tplOptions[framework].html)
-
-            this._setPrompting(prompting, () => {
-                setCompilerExt()
-
-                setOptionsTemplateToGenerator(done)
+                if (option.options) addOptions(option.options, option.name)
             })
-        })
+        }
+
+        addOptions(configTpl.options, '')
+
+        configTpl.options = options
+
+        this._setPromptings(configTpl, this.async())
     }
 
     _setConfig(options) {
-        const coreVersion = this.config.get('coreVersion') || options.coreVersion
-        const project = this.config.get('project') || options.project
-        const template = this.config.get('template') || options.template
+        const setProp = (prop) => options[prop] || this.config.get(prop) || {}
 
-        this.config.set('component', '')
-        this.config.set('coreVersion', coreVersion)
-        this.config.set('project', project)
-        this.config.set('template', template)
+        this.config.set('core', setProp('core'))
+        this.config.set('general', setProp('general'))
+        this.config.set('tpl', setProp('tpl'))
+        this.config.set('user', setProp('user'))
     }
 
-    _setPrompting(prompts, fn) {
-        this
-        .prompt(prompts)
-        .then((answers) => {
-            for (let answer in answers) {
-                this.config.set(answer, answers[answer])
+    _setPromptings(configTpl, cb) {
+        const getChoiceSelected = (choices, value) => {
+            let choiceSelected = {}
+
+            choices.forEach((choice) => {
+                if (choice.value === value) return choiceSelected = choice
+            })
+
+            return choiceSelected
+        }
+
+        const hasExclude = (choice) => false
+
+        const setPrompting = (prompt, configTpl, cb) => {
+            this
+            .prompt(prompt)
+            .then((answer) => {
+                const extend = require('extend')
+
+                const objectYo = Object.keys(prompt.option)[0]
+                const typePromptProp = Object.keys(answer)[0]
+
+                const typePromptOption = this.config.get(objectYo) || {}
+                const typePromptValue = answer[typePromptProp]
+
+                extend(typePromptOption, { [typePromptProp]: typePromptValue }, true)
+
+                const choice = getChoiceSelected(prompt.choices, typePromptValue)
+
+                if (prompt.choices && choice.extra) {
+                    extend(typePromptOption, {
+                        [`${typePromptProp}-extra`]: choice.extra
+                    }, true)
+                }
+
+                this.config.set(objectYo, typePromptOption)
+
+                configTpl.routes = configTpl.routes || []
+                const routeParent = configTpl.routes[prompt.routeParent] || ''
+
+                configTpl.routes[typePromptProp] = (routeParent && typePromptValue)
+                    ? `${routeParent}/${typePromptValue}`
+                    : typePromptValue
+                cb()
+            })
+        }
+
+        const checkExclude = (option) => {
+            const excludeOption = (choices, i) => {
+                const choice = choices[i]
+
+                const all = this.config.getAll()
+
+                for (let prop in all.tpl) {
+                    if (choice.exclude
+                    && choice.exclude[prop]
+                    && choice.exclude[prop].indexOf(all.tpl[prop]) !== -1) {
+                        const position = choices.indexOf(choice)
+
+                        choices.splice(position, 1)
+                    }
+                }
             }
 
-            fn()
-        })
+            for (let i = option.choices.length - 1; i >= 0; i--) {
+                excludeOption(option.choices, i)
+            }
+
+            return option
+        }
+
+        (() => {
+            let i = 0
+
+            const prompting = () => {
+                let option = configTpl.options[i]
+
+                if (!option) return cb()
+
+                option = checkExclude(option)
+
+                setPrompting(option, configTpl, prompting)
+
+                i++
+            }
+
+            prompting()
+        })()
     }
 
-    _writeAllFiles($) {
-        const checkExistFile = (file) => {
-            try {
-                require(file)($)
-            } catch (e) {}
-        }
-
+    _writeAllFiles($, configTpl) {
         const updateRootModifiedByUser = (route) => {
-            checkExistFile(`../../../${route}/root-modified-by-user/babelrc.js`)
-            checkExistFile(`../../../${route}/root-modified-by-user/bower.js`)
-            checkExistFile(`../../../${route}/root-modified-by-user/bowerrc.js`)
-            checkExistFile(`../../../${route}/root-modified-by-user/core-config.js`)
-            checkExistFile(`../../../${route}/root-modified-by-user/eslintrc.js`)
-            checkExistFile(`../../../${route}/root-modified-by-user/package.js`)
+            const fs = require('fs')
+
+            if (fs.existsSync(route))
+                fs.readdirSync(route).forEach((file) => require(`${route}/${file}`)($))
         }
 
-        const createRoot = (route) => {
-            this._create(`${route}/root/editorconfig`, './.editorconfig')
-            this._create(`${route}/root/gitignore`, './.gitignore')
-            this._create(`${route}/root/gulpfile.js`, './gulpfile.js')
-        }
+        const createFiles = (route) => {
+            updateRootModifiedByUser(`${route}root-modified-by-user`)
 
-        const createApp = (route) => {
-            this._create(`${route}/app/IMPORTANT.txt`, './app/IMPORTANT.txt')
+            this._create(`${route}/.core/**/*`, './.core')
+            this._create(`${route}/root/**/*`, './')
+            this._create(`${route}/app/**/*`, './app')
             this._create(`${route}/app/assets/**/*`, './app/assets', false)
-            this._create(`${route}/app/**/*.${$.html}`, './app')
-            this._create(`${route}/app/**/*.jsx`, './app')
-            this._create(`${route}/app/**/*${$.compilerExt}`, './app')
-            this._create(`${route}/app/**/*.${$.css}`, './app')
         }
 
-        const createServer = (route) => {
-            this._create(`${route}/server/**/*.${$.css}`, './server')
+        const createFilesAll = (routeTpl, routes, i) => {
+            let routeAll = ''
+
+            routes.forEach((all, j) => {
+                routeAll += (i === j)
+                    ? 'all/'
+                    : `${all}/`
+            })
+
+            createFiles(`${routeTpl}${routeAll}`)
+            createFiles(`${routeTpl}${routeAll}all`)
+            createFiles(`${routeTpl}all/${routeAll}`)
         }
 
-        const createTest = (route) => {
-            this._create(`${route}/test/${$.test}/app/**/*`, './app')
-            this._create(`${route}/test/${$.test}/karma.conf.js`, './.core/karma.conf.js')
+        const createFilesOfRoute = (routeTpl, route) => {
+            const routes = route.split('/')
+
+            createFiles(`${routeTpl}${route}`)
+            createFiles(`${routeTpl}all/${route}`)
+
+            for (let i = 0, len = routes.length; i < len; i++) {
+                createFilesAll(routeTpl, routes, i)
+            }
         }
 
-        const createTypeScript = (route) => {
-            this._create(`${route}/tsconfig.json`, './tsconfig.json')
-            this._create(`${route}/typings.json`, './typings.json')
-            this._create(`${route}/typings/**/*`, './typings')
+        const createCore = () => {
+            const path = require('path')
+            const tpl = this.config.get('tpl')
+
+            for (let prop in configTpl.routes) {
+                createFilesOfRoute(`${configTpl.routeTpl}/seed/template/`, configTpl.routes[prop])
+            }
+
+            this.composeWith('speedseed:postinstall', { options: $ })
         }
 
         const speedseed = require('speedseed')
-
         const files = new speedseed.Files()
 
-        files.del('.core', () => {
-            const routeAll = 'seed/template/all'
-            const routeFramework = `seed/template/${$.framework}`
-
-            updateRootModifiedByUser(routeAll)
-            updateRootModifiedByUser(routeFramework)
-
-            createRoot(routeAll)
-            createRoot(routeFramework)
-
-            createApp(routeAll)
-            createApp(routeFramework)
-
-            createServer(routeAll)
-            createServer(routeFramework)
-
-            if ($.test !== 'no') {
-                createTest(routeAll)
-                createTest(routeFramework)
-            }
-
-            if ($.compiler === 'typescript') {
-                createTypeScript(routeAll)
-                createTypeScript(routeFramework)
-            }
-
-            this.composeWith('speedseed:postinstall', { $ })
-        })
+        files.del('.core', createCore)
     }
 }

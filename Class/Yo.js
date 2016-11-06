@@ -1,6 +1,6 @@
 const Config = require('./Config.js')
 
-module.exports = (tplOptions) =>
+module.exports = (configTpl) =>
     class Yo extends Config {
         constructor(...args) {
             super(...args)
@@ -9,16 +9,14 @@ module.exports = (tplOptions) =>
         }
 
         paths() {
-            const path = require('path')
-
-            this.sourceRoot(path.resolve(__dirname, '../../../'))
+            this.sourceRoot(process.cwd())
         }
 
         prompting() {
-            this._promptingOptions(tplOptions)
+            this._promptingOptions(configTpl)
         }
 
         write() {
-            this._writeAllFiles(this.config.getAll())
+            this._writeAllFiles(this.config.getAll(), configTpl)
         }
     }
