@@ -77,11 +77,7 @@ module.exports = class Config extends generators.Base {
             return choiceSelected
         }
 
-        const hasExclude = (choice) => {
-            console.log(choice.exclude)
-
-            return false
-        }
+        const hasExclude = (choice) => false
 
         const setPrompting = (prompt, configTpl, cb) => {
             this
@@ -108,9 +104,11 @@ module.exports = class Config extends generators.Base {
                 this.config.set(objectYo, typePromptOption)
 
                 configTpl.routes = configTpl.routes || []
-                const routeParent = configTpl.routes[prompt.routeParent] || typePromptProp
-                configTpl.routes[typePromptProp] = `${routeParent}/${typePromptValue}`
+                const routeParent = configTpl.routes[prompt.routeParent] || ''
 
+                configTpl.routes[typePromptProp] = (routeParent && typePromptValue)
+                    ? `${routeParent}/${typePromptValue}`
+                    : typePromptValue
                 cb()
             })
         }
@@ -159,15 +157,6 @@ module.exports = class Config extends generators.Base {
     }
 
     _writeAllFiles($, configTpl) {
-        const createFiles = (route) => {
-            updateRootModifiedByUser(`${route}all/root-modified-by-user`)
-
-            this._create(`${route}/.core/**/*`, './.core')
-            this._create(`${route}/root/**/*`, './')
-            this._create(`${route}/app/**/*`, './app')
-            this._create(`${route}/app/assets/**/*`, './app/assets', false)
-        }
-
         const updateRootModifiedByUser = (route) => {
             const fs = require('fs')
 
@@ -175,37 +164,54 @@ module.exports = class Config extends generators.Base {
                 fs.readdirSync(route).forEach((file) => require(`${route}/${file}`)($))
         }
 
-        const speedseed = require('speedseed')
-        const files = new speedseed.Files()
+        const createFiles = (route) => {
+            updateRootModifiedByUser(`${route}root-modified-by-user`)
 
-        files.del('.core', () => {
+            this._create(`${route}/.core/**/*`, './.core')
+            this._create(`${route}/root/**/*`, './')
+            this._create(`${route}/app/**/*`, './app')
+            this._create(`${route}/app/assets/**/*`, './app/assets', false)
+        }
+
+        const createFilesAll = (routeTpl, routes, i) => {
+            let routeAll = ''
+
+            routes.forEach((all, j) => {
+                routeAll += (i === j)
+                    ? 'all/'
+                    : `${all}/`
+            })
+
+            createFiles(`${routeTpl}${routeAll}`)
+            createFiles(`${routeTpl}${routeAll}all`)
+            createFiles(`${routeTpl}all/${routeAll}`)
+        }
+
+        const createFilesOfRoute = (routeTpl, route) => {
+            const routes = route.split('/')
+
+            createFiles(`${routeTpl}${route}`)
+            createFiles(`${routeTpl}all/${route}`)
+
+            for (let i = 0, len = routes.length; i < len; i++) {
+                createFilesAll(routeTpl, routes, i)
+            }
+        }
+
+        const createCore = () => {
             const path = require('path')
             const tpl = this.config.get('tpl')
 
-            const routeTpl = `${configTpl.routeTpl}/seed/template/`
-
             for (let prop in configTpl.routes) {
-                const route = configTpl.routes[prop]
-                const alls = route.split('/')
-
-                createFiles(`${routeTpl}${route}`)
-
-                for (let i = 0, len = alls.length; i < len; i++) {
-                    let routeAll = ''
-
-                    alls.forEach((all, j) => {
-                        routeAll += (i === j)
-                            ? 'all/'
-                            : `${all}/`
-                    })
-
-                    createFiles(`${routeTpl}${routeAll}`)
-                    createFiles(`${routeTpl}${routeAll}all`)
-                }
+                createFilesOfRoute(`${configTpl.routeTpl}/seed/template/`, configTpl.routes[prop])
             }
 
-
             this.composeWith('speedseed:postinstall', { options: $ })
-        })
+        }
+
+        const speedseed = require('speedseed')
+        const files = new speedseed.Files()
+
+        files.del('.core', createCore)
     }
 }
