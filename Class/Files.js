@@ -9,15 +9,15 @@ class Files {
     extendFromOptions($, optionsGeneral, optionsTpl) {
         const extend = require('extend')
 
-        for (let prop in optionsTpl) {
-            const optionTpl = optionsTpl[prop]
+        Object.keys(optionsTpl).forEach((key) => {
+            const optionTpl = optionsTpl[key]
 
             extend(
                 true,
                 optionsGeneral,
-                optionTpl[$.tpl[prop]]
+                optionTpl[$.tpl[key]]
             )
-        }
+        })
     }
 
     extendFromUser(optionsGeneral, fileCore) {

@@ -52,6 +52,7 @@ module.exports = class Config extends generators.Base {
 
         addOptions(configTpl.options, '')
 
+        configTpl.oldOptions = configTpl.options
         configTpl.options = options
 
         this._setPromptings(configTpl, this.async())
@@ -79,6 +80,11 @@ module.exports = class Config extends generators.Base {
 
         const hasExclude = (choice) => false
 
+        const setRouteKey = (key, val) => {
+            configTpl.routes = configTpl.routes || {}
+            configTpl.routes[key] = val
+        }
+
         const setPrompting = (prompt, configTpl, cb) => {
             this
             .prompt(prompt)
@@ -86,29 +92,25 @@ module.exports = class Config extends generators.Base {
                 const extend = require('extend')
 
                 const objectYo = Object.keys(prompt.option)[0]
-                const typePromptProp = Object.keys(answer)[0]
+                const typePromptKey = Object.keys(answer)[0]
 
                 const typePromptOption = this.config.get(objectYo) || {}
-                const typePromptValue = answer[typePromptProp]
+                const typePromptVal = answer[typePromptKey]
 
-                extend(typePromptOption, { [typePromptProp]: typePromptValue }, true)
+                extend(typePromptOption, { [typePromptKey]: typePromptVal }, true)
 
-                const choice = getChoiceSelected(prompt.choices, typePromptValue)
+                const choice = getChoiceSelected(prompt.choices, typePromptVal)
 
                 if (prompt.choices && choice.extra) {
                     extend(typePromptOption, {
-                        [`${typePromptProp}-extra`]: choice.extra
+                        [`${typePromptKey}-extra`]: choice.extra
                     }, true)
                 }
 
                 this.config.set(objectYo, typePromptOption)
 
-                configTpl.routes = configTpl.routes || []
-                const routeParent = configTpl.routes[prompt.routeParent] || ''
+                setRouteKey(typePromptKey, typePromptVal)
 
-                configTpl.routes[typePromptProp] = (routeParent && typePromptValue)
-                    ? `${routeParent}/${typePromptValue}`
-                    : typePromptValue
                 cb()
             })
         }
@@ -157,15 +159,20 @@ module.exports = class Config extends generators.Base {
     }
 
     _writeAllFiles($, configTpl) {
-        const updateRootModifiedByUser = (route) => {
-            const fs = require('fs')
+        const tplRoute = `${configTpl.routeTpl}/seed/template`
 
-            if (fs.existsSync(route))
-                fs.readdirSync(route).forEach((file) => require(`${route}/${file}`)($))
+        const updateRootModifiedByUser = (route) => {
+            const { existsSync, readdirSync } = require('fs')
+
+            if (existsSync(route)) {
+                readdirSync(route).forEach((file) => {
+                    require(`${route}/${file}`)($)
+                })
+            }
         }
 
         const createFiles = (route) => {
-            updateRootModifiedByUser(`${route}root-modified-by-user`)
+            updateRootModifiedByUser(`${route}/root-modified-by-user`)
 
             this._create(`${route}/.core/**/*`, './.core')
             this._create(`${route}/root/**/*`, './')
@@ -173,44 +180,29 @@ module.exports = class Config extends generators.Base {
             this._create(`${route}/app/assets/**/*`, './app/assets', false)
         }
 
-        const createFilesAll = (routeTpl, routes, i) => {
-            let routeAll = ''
+        const createFilesOfRoute = (route, opts) => {
+            opts && opts.forEach((obj, i) => {
+                const { name, options } = obj
+                const val = configTpl.routes[name]
 
-            routes.forEach((all, j) => {
-                routeAll += (i === j)
-                    ? 'all/'
-                    : `${all}/`
+                createFiles(`${tplRoute}/all/${name}/${val}`)
+                createFiles(`${route}/${name}/all`)
+                createFiles(`${route}/${name}/${val}`)
+
+                createFilesOfRoute(`${route}/${name}/${val}`, options)
             })
-
-            createFiles(`${routeTpl}${routeAll}`)
-            createFiles(`${routeTpl}${routeAll}all`)
-            createFiles(`${routeTpl}all/${routeAll}`)
-        }
-
-        const createFilesOfRoute = (routeTpl, route) => {
-            const routes = route.split('/')
-
-            createFiles(`${routeTpl}${route}`)
-            createFiles(`${routeTpl}all/${route}`)
-
-            for (let i = 0, len = routes.length; i < len; i++) {
-                createFilesAll(routeTpl, routes, i)
-            }
         }
 
         const createCore = () => {
-            const path = require('path')
-            const tpl = this.config.get('tpl')
-
-            for (let prop in configTpl.routes) {
-                createFilesOfRoute(`${configTpl.routeTpl}/seed/template/`, configTpl.routes[prop])
-            }
+            createFiles(`${tplRoute}/all`)
+            createFilesOfRoute(tplRoute, configTpl.oldOptions)
 
             this.composeWith('speedseed:postinstall', { options: $ })
         }
 
-        const speedseed = require('speedseed')
-        const files = new speedseed.Files()
+        const Files = require('./Files')
+
+        const files = new Files()
 
         files.del('.core', createCore)
     }
