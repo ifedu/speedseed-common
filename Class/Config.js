@@ -175,9 +175,10 @@ module.exports = class Config extends generators.Base {
             updateRootModifiedByUser(`${route}/root-modified-by-user`)
 
             this._create(`${route}/.core/**/*`, './.core')
-            this._create(`${route}/root/**/*`, './')
             this._create(`${route}/app/**/*`, './app')
-            this._create(`${route}/app/assets/**/*`, './app/assets', false)
+            this._create(`${route}/root/**/*`, './')
+
+            this._create(`${route}/copy/**/*`, './', false)
         }
 
         const createFilesOfRoute = (route, opts) => {
