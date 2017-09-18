@@ -3,7 +3,7 @@
     "homepage": "https://github.com/ifedu/speedseed",
     "main": "index.ts",
     "name": "speedseed",
-    "version": "0.22.2",
+    "version": "0.22.3",
 
     "author": {
         "name": "Eduardo Pérez-Bermejo",
@@ -12,6 +12,10 @@
     },
 
     "dependencies": {
+        "@types/del": "3.0.0",
+        "@types/lodash": "4.14.74",
+        "@types/node": "8.0.28",
+        "@types/yeoman-generator": "1.0.3",
         "del": "3.0.0",
         "lodash": "4.17.4",
         "ts-node": "3.3.0",
@@ -19,13 +23,6 @@
         "tslint": "5.7.0",
         "typescript": "2.5.2",
         "yeoman-generator": "1.1.1"
-    },
-
-    "devDependencies": {
-        "@types/del": "3.0.0",
-        "@types/lodash": "4.14.74",
-        "@types/node": "8.0.28",
-        "@types/yeoman-generator": "1.0.3"
     },
 
     "engines" : {
