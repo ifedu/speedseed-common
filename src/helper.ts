@@ -8,6 +8,8 @@ export default class Helper extends Base {
     constructor(args: any, options: any) {
         super(args, options)
 
+        core.setYo(options.core.yo)
+
         this.update = options.update
     }
 

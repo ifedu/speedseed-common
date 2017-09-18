@@ -1,3 +1,4 @@
+import { core } from '../'
 import { resolve } from 'path'
 
 export default class Core {
@@ -9,6 +10,7 @@ export default class Core {
         const tpl: string = `speedseed-${this.options['template']}`
 
         options = options || {}
+        options.core = core
 
         this.yo.composeWith(tpl, options)
     }

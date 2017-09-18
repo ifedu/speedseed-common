@@ -8,6 +8,7 @@ tsNode.register({
     compilerOptions: {
         allowJs: true
     },
+    ignore: [],
 
     project: path.resolve(__dirname),
 })
