@@ -3,7 +3,7 @@
     "homepage": "https://github.com/ifedu/speedseed",
     "main": "index.ts",
     "name": "speedseed",
-    "version": "0.22.4",
+    "version": "0.22.5",
 
     "author": {
         "name": "Eduardo Pérez-Bermejo",
@@ -26,7 +26,7 @@
     },
 
     "engines" : {
-        "node" : ">=6.0.0"
+        "node": ">=6.0.0"
     },
 
     "repository": {

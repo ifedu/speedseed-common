@@ -12,7 +12,7 @@ tsNode.register({
     },
 
     ignore: [
-        /^(.(?!speedseed))*$/
+        /^((?!\bspeedseed\b|\bconfig\b|\bcore\b).)*$/
     ],
 
     project: path.resolve(__dirname),
