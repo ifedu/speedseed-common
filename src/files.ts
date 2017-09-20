@@ -73,11 +73,11 @@ export default class Files {
 
     private copyFiles(fileTpl: string, fileDest: string, isTpl?: boolean) {
         if (isTpl === false) {
-            this.copy('copy', `${fileTpl}/**/*`, fileDest)
+            this.copy('copy', fileTpl, fileDest)
             this.copy('copy', `${fileTpl}/**/.*`, fileDest)
         }
         else {
-            this.copy('copyTpl', `${fileTpl}/**/*`, fileDest)
+            this.copy('copyTpl', fileTpl, fileDest)
             this.copy('copyTpl', `${fileTpl}/**/.*`, fileDest)
         }
     }
