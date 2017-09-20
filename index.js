@@ -7,13 +7,13 @@ const tsConfig = require('./tsconfig.json')
 tsNode.register({
     fast: true,
 
+    cacheDirectory:  `${__dirname}/.tscache`,
+
     compilerOptions: {
         allowJs: true
     },
 
-    ignore: [
-        /^((?!\bspeedseed\b|\bconfig\b|\bcore\b).)*$/
-    ],
+    ignore: [],
 
     project: path.resolve(__dirname),
 })

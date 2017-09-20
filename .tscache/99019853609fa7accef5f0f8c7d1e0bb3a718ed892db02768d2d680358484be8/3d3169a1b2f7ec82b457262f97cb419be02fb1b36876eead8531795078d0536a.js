@@ -1,0 +1,31 @@
+'use strict';
+var path = require('path');
+var fs = require('fs');
+/**
+ * Check if the file contents at `filepath` conflict with the `contents` passed to the
+ * function
+ *
+ * If `filepath` points to a folder, we'll always return true.
+ *
+ * @param  {String} filepath Destination filepath (current with to compare with)
+ * @param  {Buffer|String} contents The new content to compare with. If passed as a
+ *                                  string, we assume it is utf8 encoded.
+ * @return {Boolean} `true` if there's a conflict, `false` otherwise.
+ */
+module.exports = function (filepath, contents) {
+    filepath = path.resolve(filepath);
+    // If file is new, then it's safe to process
+    if (!fs.existsSync(filepath))
+        return false;
+    // If file path point to a directory, then it's not safe to write
+    if (fs.statSync(filepath).isDirectory())
+        return true;
+    var actual = fs.readFileSync(path.resolve(filepath));
+    if (!(contents instanceof Buffer)) {
+        contents = new Buffer(contents || '', 'utf8');
+    }
+    // We convert each Buffer contents to an hexadecimal string first, and then compare
+    // them with standard `===`. This trick allow to compare binary files contents.
+    return actual.toString('hex') !== contents.toString('hex');
+};
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiQzpcXFVzZXJzXFxpZmVkdVxcQXBwRGF0YVxcUm9hbWluZ1xcbnZtXFx2OC40LjBcXG5vZGVfbW9kdWxlc1xcZ2VuZXJhdG9yLXNwZWVkc2VlZFxcbm9kZV9tb2R1bGVzXFxkZXRlY3QtY29uZmxpY3RcXGluZGV4LmpzIiwic291cmNlcyI6WyJDOlxcVXNlcnNcXGlmZWR1XFxBcHBEYXRhXFxSb2FtaW5nXFxudm1cXHY4LjQuMFxcbm9kZV9tb2R1bGVzXFxnZW5lcmF0b3Itc3BlZWRzZWVkXFxub2RlX21vZHVsZXNcXGRldGVjdC1jb25mbGljdFxcaW5kZXguanMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUEsWUFBWSxDQUFDO0FBQ2IsSUFBSSxJQUFJLEdBQUcsT0FBTyxDQUFDLE1BQU0sQ0FBQyxDQUFDO0FBQzNCLElBQUksRUFBRSxHQUFHLE9BQU8sQ0FBQyxJQUFJLENBQUMsQ0FBQztBQUV2Qjs7Ozs7Ozs7OztHQVVHO0FBQ0gsTUFBTSxDQUFDLE9BQU8sR0FBRyxVQUFVLFFBQVEsRUFBRSxRQUFRO0lBQzNDLFFBQVEsR0FBRyxJQUFJLENBQUMsT0FBTyxDQUFDLFFBQVEsQ0FBQyxDQUFDO0lBRWxDLDRDQUE0QztJQUM1QyxFQUFFLENBQUMsQ0FBQyxDQUFDLEVBQUUsQ0FBQyxVQUFVLENBQUMsUUFBUSxDQUFDLENBQUM7UUFBQyxNQUFNLENBQUMsS0FBSyxDQUFDO0lBRTNDLGlFQUFpRTtJQUNqRSxFQUFFLENBQUMsQ0FBQyxFQUFFLENBQUMsUUFBUSxDQUFDLFFBQVEsQ0FBQyxDQUFDLFdBQVcsRUFBRSxDQUFDO1FBQUMsTUFBTSxDQUFDLElBQUksQ0FBQztJQUVyRCxJQUFJLE1BQU0sR0FBRyxFQUFFLENBQUMsWUFBWSxDQUFDLElBQUksQ0FBQyxPQUFPLENBQUMsUUFBUSxDQUFDLENBQUMsQ0FBQztJQUVyRCxFQUFFLENBQUMsQ0FBQyxDQUFDLENBQUMsUUFBUSxZQUFZLE1BQU0sQ0FBQyxDQUFDLENBQUMsQ0FBQztRQUNsQyxRQUFRLEdBQUcsSUFBSSxNQUFNLENBQUMsUUFBUSxJQUFJLEVBQUUsRUFBRSxNQUFNLENBQUMsQ0FBQztJQUNoRCxDQUFDO0lBRUQsbUZBQW1GO0lBQ25GLCtFQUErRTtJQUMvRSxNQUFNLENBQUMsTUFBTSxDQUFDLFFBQVEsQ0FBQyxLQUFLLENBQUMsS0FBSyxRQUFRLENBQUMsUUFBUSxDQUFDLEtBQUssQ0FBQyxDQUFBO0FBQzVELENBQUMsQ0FBQyIsInNvdXJjZXNDb250ZW50IjpbIid1c2Ugc3RyaWN0JztcbnZhciBwYXRoID0gcmVxdWlyZSgncGF0aCcpO1xudmFyIGZzID0gcmVxdWlyZSgnZnMnKTtcblxuLyoqXG4gKiBDaGVjayBpZiB0aGUgZmlsZSBjb250ZW50cyBhdCBgZmlsZXBhdGhgIGNvbmZsaWN0IHdpdGggdGhlIGBjb250ZW50c2AgcGFzc2VkIHRvIHRoZVxuICogZnVuY3Rpb25cbiAqXG4gKiBJZiBgZmlsZXBhdGhgIHBvaW50cyB0byBhIGZvbGRlciwgd2UnbGwgYWx3YXlzIHJldHVybiB0cnVlLlxuICpcbiAqIEBwYXJhbSAge1N0cmluZ30gZmlsZXBhdGggRGVzdGluYXRpb24gZmlsZXBhdGggKGN1cnJlbnQgd2l0aCB0byBjb21wYXJlIHdpdGgpXG4gKiBAcGFyYW0gIHtCdWZmZXJ8U3RyaW5nfSBjb250ZW50cyBUaGUgbmV3IGNvbnRlbnQgdG8gY29tcGFyZSB3aXRoLiBJZiBwYXNzZWQgYXMgYVxuICogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgc3RyaW5nLCB3ZSBhc3N1bWUgaXQgaXMgdXRmOCBlbmNvZGVkLlxuICogQHJldHVybiB7Qm9vbGVhbn0gYHRydWVgIGlmIHRoZXJlJ3MgYSBjb25mbGljdCwgYGZhbHNlYCBvdGhlcndpc2UuXG4gKi9cbm1vZHVsZS5leHBvcnRzID0gZnVuY3Rpb24gKGZpbGVwYXRoLCBjb250ZW50cykge1xuICBmaWxlcGF0aCA9IHBhdGgucmVzb2x2ZShmaWxlcGF0aCk7XG5cbiAgLy8gSWYgZmlsZSBpcyBuZXcsIHRoZW4gaXQncyBzYWZlIHRvIHByb2Nlc3NcbiAgaWYgKCFmcy5leGlzdHNTeW5jKGZpbGVwYXRoKSkgcmV0dXJuIGZhbHNlO1xuXG4gIC8vIElmIGZpbGUgcGF0aCBwb2ludCB0byBhIGRpcmVjdG9yeSwgdGhlbiBpdCdzIG5vdCBzYWZlIHRvIHdyaXRlXG4gIGlmIChmcy5zdGF0U3luYyhmaWxlcGF0aCkuaXNEaXJlY3RvcnkoKSkgcmV0dXJuIHRydWU7XG5cbiAgdmFyIGFjdHVhbCA9IGZzLnJlYWRGaWxlU3luYyhwYXRoLnJlc29sdmUoZmlsZXBhdGgpKTtcblxuICBpZiAoIShjb250ZW50cyBpbnN0YW5jZW9mIEJ1ZmZlcikpIHtcbiAgICBjb250ZW50cyA9IG5ldyBCdWZmZXIoY29udGVudHMgfHwgJycsICd1dGY4Jyk7XG4gIH1cblxuICAvLyBXZSBjb252ZXJ0IGVhY2ggQnVmZmVyIGNvbnRlbnRzIHRvIGFuIGhleGFkZWNpbWFsIHN0cmluZyBmaXJzdCwgYW5kIHRoZW4gY29tcGFyZVxuICAvLyB0aGVtIHdpdGggc3RhbmRhcmQgYD09PWAuIFRoaXMgdHJpY2sgYWxsb3cgdG8gY29tcGFyZSBiaW5hcnkgZmlsZXMgY29udGVudHMuXG4gIHJldHVybiBhY3R1YWwudG9TdHJpbmcoJ2hleCcpICE9PSBjb250ZW50cy50b1N0cmluZygnaGV4Jylcbn07XG4iXX0=
