@@ -7,8 +7,6 @@ const tsConfig = require('./tsconfig.json')
 tsNode.register({
     fast: true,
 
-    cacheDirectory:  `${__dirname}/.tscache`,
-
     compilerOptions: {
         allowJs: true
     },
