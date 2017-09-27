@@ -13,8 +13,8 @@ export default class Helper extends Base {
         this.update = options.update
     }
 
-    static setOptions(name: string, value: string, extra?: string, exclude?: any) {
-        return { name, value, extra, exclude }
+    static setOptions(name: string, value: string, exclude?: any) {
+        return { name, value, exclude }
     }
 
     static Yo(tpl: any) {
