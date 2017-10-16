@@ -1,16 +1,18 @@
-import { core } from '../'
-import { resolve } from 'path'
+import { relative, resolve } from 'path'
 
 export default class Core {
+    setDestinationRoot: boolean = false
     options: any
     root: any = process.cwd()
+    speedseedgui: any
     yo: any
 
     callTpl(options: any) {
         const tpl: string = `speedseed-${this.options['template']}`
 
         options = options || {}
-        options.core = core
+        options.core = this
+        options.speedseedgui = this.speedseedgui
 
         this.yo.composeWith(tpl, options)
     }
@@ -19,12 +21,25 @@ export default class Core {
         return resolve(dirname, route)
     }
 
-    setCore(packageNpm: any) {
-        const { name, version } = packageNpm
-        const { config } = this.yo
+    setGui(speedseedgui: any) {
+        if (!speedseedgui) return
+        this.speedseedgui = speedseedgui
+        this.root = speedseedgui.route
 
-        config.set('coreName', name)
-        config.set('coreVersion', version)
+        if (!this.setDestinationRoot) {
+            this.setDestinationRoot = true
+
+            const routeDest: string = relative(process.cwd(), this.root)
+
+            this.yo.destinationRoot(routeDest)
+        }
+
+
+        for (let prop in speedseedgui.options) {
+            const val = speedseedgui.options[prop]
+
+            this.yo.config.set(prop, val)
+        }
     }
 
     setOptions() {
@@ -32,9 +47,9 @@ export default class Core {
     }
 
     setPath(dirname: any, root: any) {
-        const route = resolve(dirname, root)
+        const routeTpl: string = resolve(dirname, root)
 
-        this.yo.sourceRoot(route)
+        this.yo.sourceRoot(routeTpl)
     }
 
     setProject() {
@@ -43,6 +58,14 @@ export default class Core {
         project = project.toLowerCase().replace(/[-_ ]/g, '')
 
         this.yo.config.set('project', project)
+    }
+
+    setVersion(type: string, packageNpm: any) {
+        const { name, version } = packageNpm
+        const { config } = this.yo
+
+        config.set(`${type}Name`, name)
+        config.set(`${type}Version`, version)
     }
 
     setYo(yo: any) {

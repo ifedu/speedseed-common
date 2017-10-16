@@ -1,5 +1,6 @@
 import * as del from 'del'
 import { lstat } from 'fs'
+import { resolve } from 'path'
 
 import { construct, core, Helper, prompter } from '../'
 
@@ -20,7 +21,9 @@ export default class Files {
     writeFiles() {
         console.log('deleting core...')
 
-        this.del('core', this.createCore)
+        const dir = resolve(core.root, 'core')
+
+        this.del(dir, this.createCore)
     }
 
     private createCore = () => {
@@ -83,6 +86,8 @@ export default class Files {
     }
 
     private copy(copyTpl: string, fileTpl: string, fileDest: string) {
+        fileDest = resolve(core.root, fileDest)
+
         try {
             core.yo.fs[copyTpl](
                 core.yo.templatePath(fileTpl),

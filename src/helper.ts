@@ -11,6 +11,13 @@ export default class Helper extends Base {
         core.setYo(options.core.yo)
 
         this.update = options.update
+
+        core.setGui(options.speedseedgui)
+
+        if (!Helper.tpl.packageNpm) return
+
+        core.setVersion('tpl', Helper.tpl.packageNpm)
+        core.viewVersion(Helper.tpl.packageNpm)
     }
 
     static setOptions(name: string, value: string, exclude?: any) {
@@ -24,11 +31,11 @@ export default class Helper extends Base {
     }
 
     paths() {
-        core.setPath(core.root, './')
+        core.setPath(Helper.tpl.routeTpl, './')
     }
 
     prompting() {
-        if (this.update) return
+        if (core.speedseedgui || this.update) return
 
         const { options } = Helper.tpl
 

@@ -1,6 +1,6 @@
 import { merge, template } from 'lodash'
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'fs'
-import { basename } from 'path'
+import { basename, resolve } from 'path'
 
 import { Helper, core, prompter } from '../'
 
@@ -24,13 +24,15 @@ export default class Construct {
     }
 
     writeJsonSeed(dest: string) {
-        mkdirSync(dest)
-        mkdirSync(`${dest}/construct`)
+        const route = resolve(core.root, dest)
+
+        mkdirSync(route)
+        mkdirSync(`${route}/construct`)
 
         for (let prop in this.jsonSeed) {
             const routeProp = `/construct/${prop}`
 
-            this.writeFileExportJs(`${dest}${routeProp}`, this.jsonSeed[prop], 4)
+            this.writeFileExportJs(`${route}${routeProp}`, this.jsonSeed[prop], 4)
         }
     }
 
@@ -47,9 +49,11 @@ export default class Construct {
             let nameFile: string = basename(prop, '.ts')
             nameFile = `${nameFile}.json`
 
-            console.log(`   create ${nameFile}`)
+            const route = resolve(core.root, nameFile)
 
-            this.writeFile(nameFile, JSON.parse(data), 4)
+            console.log(`   create ${route}`)
+
+            this.writeFile(route, JSON.parse(data), 4)
         }
     }
 

@@ -28,10 +28,14 @@ export default class Prompter {
 
     getTemplateFiles(name: string) {
         return {
-            default: ((core.yo.config.get(name) === false)
-                ? 1
-                : 0)
-                || 0,
+            default: (
+                (
+                    (core.yo.config.get(name) === false)
+                        ? 1
+                        : 0
+                )
+                || 0
+            ),
             message: 'Template files?',
             name,
             type: 'list',
