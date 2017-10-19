@@ -3,18 +3,13 @@ import { Base, core, files, prompter } from '../'
 export default class Helper extends Base {
     static tpl: any
 
-    update: boolean
-
     constructor(args: any, options: any) {
         super(args, options)
 
         core.setYo(options.core.yo)
 
-        this.update = options.update
-
         core.setGui(options.speedseedgui)
-
-        if (!Helper.tpl.packageNpm) return
+        core.setUpdate(options.update)
 
         core.setVersion('tpl', Helper.tpl.packageNpm)
         core.viewVersion(Helper.tpl.packageNpm)
@@ -35,7 +30,7 @@ export default class Helper extends Base {
     }
 
     prompting() {
-        if (core.speedseedgui || this.update) return
+        if (core.speedseedgui || core.update) return
 
         const { options } = Helper.tpl
 

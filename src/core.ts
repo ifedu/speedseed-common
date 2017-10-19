@@ -1,18 +1,19 @@
 import { relative, resolve } from 'path'
 
 export default class Core {
-    setDestinationRoot: boolean = false
     options: any
     root: any = process.cwd()
+    setDestinationRoot: boolean = false
     speedseedgui: any
+    update: boolean
     yo: any
 
     callTpl(options: any) {
         const tpl: string = `speedseed-${this.options['template']}`
 
-        options = options || {}
         options.core = this
         options.speedseedgui = this.speedseedgui
+        options.update = this.update
 
         this.yo.composeWith(tpl, options)
     }
@@ -58,6 +59,10 @@ export default class Core {
         project = project.toLowerCase().replace(/[-_ ]/g, '')
 
         this.yo.config.set('project', project)
+    }
+
+    setUpdate(update: boolean) {
+        this.update = update
     }
 
     setVersion(type: string, packageNpm: any) {
