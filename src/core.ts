@@ -24,8 +24,12 @@ export default class Core {
 
     setGui(speedseedgui: any) {
         if (!speedseedgui) return
-        this.speedseedgui = speedseedgui
-        this.root = speedseedgui.route
+
+        this.speedseedgui = (typeof speedseedgui === 'string')
+            ? JSON.parse(speedseedgui)
+            : speedseedgui
+
+        this.root = this.speedseedgui.route
 
         if (!this.setDestinationRoot) {
             this.setDestinationRoot = true
@@ -36,8 +40,8 @@ export default class Core {
         }
 
 
-        for (let prop in speedseedgui.options) {
-            const val = speedseedgui.options[prop]
+        for (let prop in this.speedseedgui.options) {
+            const val = this.speedseedgui.options[prop]
 
             this.yo.config.set(prop, val)
         }
