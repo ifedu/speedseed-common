@@ -1,4 +1,4 @@
-import { relative, resolve } from 'path'
+import { resolve } from 'path'
 
 export default class Core {
     options: any
@@ -26,7 +26,7 @@ export default class Core {
         if (!speedseedgui) return
 
         this.speedseedgui = (typeof speedseedgui === 'string')
-            ? JSON.parse(speedseedgui)
+            ? JSON.parse(speedseedgui.replace(/\\'/g, '"'))
             : speedseedgui
 
         this.root = this.speedseedgui.route
@@ -34,9 +34,7 @@ export default class Core {
         if (!this.setDestinationRoot) {
             this.setDestinationRoot = true
 
-            const routeDest: string = relative(process.cwd(), this.root)
-
-            this.yo.destinationRoot(routeDest)
+            this.yo.destinationRoot(process.cwd())
         }
 
 

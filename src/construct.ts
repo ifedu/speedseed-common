@@ -51,9 +51,29 @@ export default class Construct {
 
             const route = resolve(core.root, nameFile)
 
-            console.log(`   create ${route}`)
+            const dataJson = this.transformJson(data)
 
-            this.writeFile(route, JSON.parse(data), 4)
+            this.writeFile(route, dataJson, 4)
+        }
+    }
+
+    private transformJson(data: any) {
+        const dataJson = JSON.parse(data)
+        const dataJsonOrder = Object.assign({}, dataJson)
+
+        this.orderJson(dataJson, dataJsonOrder, 'dependencies')
+        this.orderJson(dataJson, dataJsonOrder, 'devDependencies')
+
+        return dataJsonOrder
+    }
+
+    private orderJson(dataJson: any, dataJsonOrder: any, type: string) {
+        if (dataJson[type]) {
+            dataJsonOrder[type] = {}
+
+            Object.keys(dataJson[type]).sort().forEach((val: any) => {
+                dataJsonOrder[type][val] = dataJson[type][val]
+            })
         }
     }
 
